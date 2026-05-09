@@ -26,6 +26,38 @@ extern char trampoline[]; // trampoline.S
 // must be acquired before any p->lock.
 struct spinlock wait_lock;
 
+int isfrozen(struct proc *p){
+	return p->state == FROZEN;
+}
+
+struct proc*
+findproc(int pid){
+	struct proc *p;
+	for(p = proc; p < &proc[NPROC]; p++){
+		acquire(&p->lock);
+		if(p->state != UNUSED && p->pid == pid){
+			return p;
+		}
+		release(&p->lock);
+	}
+
+	return 0;
+}
+
+int can_freeze(struct proc *p){
+	if(p == 0)
+		return 0;
+
+	if(p->state == UNUSED || p->state == ZOMBIE)
+		return 0;
+
+	if(p->state == FROZEN)
+		return 0;
+
+
+	return 1;
+}
+
 // Allocate a page for each process's kernel stack.
 // Map it high in memory, followed by an invalid
 // guard page.
@@ -668,7 +700,8 @@ procdump(void)
   [SLEEPING]  "sleep ",
   [RUNNABLE]  "runble",
   [RUNNING]   "run   ",
-  [ZOMBIE]    "zombie"
+  [ZOMBIE]    "zombie",
+  [FROZEN]    "frozen"
   };
   struct proc *p;
   char *state;
