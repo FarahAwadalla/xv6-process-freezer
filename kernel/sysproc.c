@@ -105,3 +105,27 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+
+// kernel/sysproc.c
+
+uint64
+sys_freeze(void)
+{
+  int pid;
+  // Retrieve the first argument (the PID) from the system call
+  if(argint(0, &pid) < 0)
+    return -1;
+  
+  // Call the process management logic (to be provided by Member 1)
+  return freeze_process(pid); 
+}
+
+uint64
+sys_resume(void)
+{
+  int pid;
+  if(argint(0, &pid) < 0)
+    return -1;
+
+  return resume_process(pid);
+}
