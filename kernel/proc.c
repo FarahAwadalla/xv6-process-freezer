@@ -57,7 +57,55 @@ int can_freeze(struct proc *p){
 
 	return 1;
 }
+int
+freeze_process(int pid)
+{
+  struct proc *caller = myproc();
+  struct proc *p;
 
+  p = findproc(pid);       // returns with p->lock held
+  if(p == 0)
+    return -1;
+
+  if(!can_freeze(p)){
+    release(&p->lock);
+    return -1;
+  }
+
+  p->frozen_state = p->state;
+  p->state = FROZEN;
+  release(&p->lock);
+
+  // Self-freeze: must yield CPU immediately
+  if(p == caller){
+    acquire(&p->lock);
+    sched();               // hands CPU back to scheduler
+    release(&p->lock);
+  }
+
+  return 0;
+}
+
+int
+resume_process(int pid)
+{
+  struct proc *p;
+
+  p = findproc(pid);       // returns with p->lock held
+  if(p == 0)
+    return -1;
+
+  if(p->state != FROZEN){
+    release(&p->lock);
+    return -1;
+  }
+
+  p->state = RUNNABLE;     // scheduler will pick it up
+  p->frozen_state = 0;
+  release(&p->lock);
+
+  return 0;
+}
 // Allocate a page for each process's kernel stack.
 // Map it high in memory, followed by an invalid
 // guard page.
