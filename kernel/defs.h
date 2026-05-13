@@ -103,6 +103,8 @@ int             either_copyin(void *dst, int user_src, uint64 src, uint64 len);
 void            procdump(void);
 struct proc*    findproc(int);
 int             can_freeze(struct proc*);
+int             freeze_process(int);   
+int             resume_process(int);
 
 // swtch.S
 void            swtch(struct context*, struct context*);
