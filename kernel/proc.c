@@ -26,6 +26,86 @@ extern char trampoline[]; // trampoline.S
 // must be acquired before any p->lock.
 struct spinlock wait_lock;
 
+int isfrozen(struct proc *p){
+	return p->state == FROZEN;
+}
+
+struct proc*
+findproc(int pid){
+	struct proc *p;
+	for(p = proc; p < &proc[NPROC]; p++){
+		acquire(&p->lock);
+		if(p->state != UNUSED && p->pid == pid){
+			return p;
+		}
+		release(&p->lock);
+	}
+
+	return 0;
+}
+
+int can_freeze(struct proc *p){
+	if(p == 0)
+		return 0;
+
+	if(p->state == UNUSED || p->state == ZOMBIE)
+		return 0;
+
+	if(p->state == FROZEN)
+		return 0;
+
+
+	return 1;
+}
+int
+freeze_process(int pid)
+{
+  struct proc *caller = myproc();
+  struct proc *p;
+
+  p = findproc(pid);       // returns with p->lock held
+  if(p == 0)
+    return -1;
+
+  if(!can_freeze(p)){
+    release(&p->lock);
+    return -1;
+  }
+
+  p->frozen_state = p->state;
+  p->state = FROZEN;
+  release(&p->lock);
+
+  // Self-freeze: must yield CPU immediately
+  if(p == caller){
+    acquire(&p->lock);
+    sched();               // hands CPU back to scheduler
+    release(&p->lock);
+  }
+
+  return 0;
+}
+
+int
+resume_process(int pid)
+{
+  struct proc *p;
+
+  p = findproc(pid);       // returns with p->lock held
+  if(p == 0)
+    return -1;
+
+  if(p->state != FROZEN){
+    release(&p->lock);
+    return -1;
+  }
+
+  p->state = RUNNABLE;     // scheduler will pick it up
+  p->frozen_state = 0;
+  release(&p->lock);
+
+  return 0;
+}
 // Allocate a page for each process's kernel stack.
 // Map it high in memory, followed by an invalid
 // guard page.
@@ -668,7 +748,8 @@ procdump(void)
   [SLEEPING]  "sleep ",
   [RUNNABLE]  "runble",
   [RUNNING]   "run   ",
-  [ZOMBIE]    "zombie"
+  [ZOMBIE]    "zombie",
+  [FROZEN]    "frozen"
   };
   struct proc *p;
   char *state;
