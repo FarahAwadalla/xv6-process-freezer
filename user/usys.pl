@@ -31,6 +31,7 @@ entry("close");
 entry("kill");
 entry("exec");
 entry("open");
+entry("sleep");
 entry("mknod");
 entry("unlink");
 entry("fstat");
