@@ -25,7 +25,7 @@ int getpid(void);
 char* sys_sbrk(int,int);
 int pause(int);
 int uptime(void);
-int freeze(int);
+int freeze(int, char*);
 int resume(int);
 
 // ulib.c
