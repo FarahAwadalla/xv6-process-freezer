@@ -220,6 +220,9 @@ found:
     return 0;
   }
 
+  p->frozen = 0;
+  memset(p->freeze_reason, 0, sizeof(p->freeze_reason));
+  
   // Set up new context to start executing at forkret,
   // which returns to user space.
   memset(&p->context, 0, sizeof(p->context));
@@ -249,6 +252,8 @@ freeproc(struct proc *p)
   p->killed = 0;
   p->xstate = 0;
   p->state = UNUSED;
+  p->frozen = 0;
+  memset(p->freeze_reason, 0, sizeof(p->freeze_reason));
 }
 
 // Create a user page table for a given process, with no user memory,
