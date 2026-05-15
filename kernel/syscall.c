@@ -81,6 +81,7 @@ argstr(int n, char *buf, int max)
 
 // Prototypes for the functions that handle system calls.
 extern uint64 sys_fork(void);
+extern uint64 sys_sleep(void);
 extern uint64 sys_exit(void);
 extern uint64 sys_wait(void);
 extern uint64 sys_pipe(void);
@@ -101,6 +102,8 @@ extern uint64 sys_unlink(void);
 extern uint64 sys_link(void);
 extern uint64 sys_mkdir(void);
 extern uint64 sys_close(void);
+extern uint64 sys_freeze(void);
+extern uint64 sys_resume(void);
 
 // An array mapping syscall numbers from syscall.h
 // to the function that handles the system call.
@@ -111,6 +114,7 @@ static uint64 (*syscalls[])(void) = {
 [SYS_pipe]    sys_pipe,
 [SYS_read]    sys_read,
 [SYS_kill]    sys_kill,
+[SYS_sleep]   sys_sleep,
 [SYS_exec]    sys_exec,
 [SYS_fstat]   sys_fstat,
 [SYS_chdir]   sys_chdir,
@@ -126,6 +130,8 @@ static uint64 (*syscalls[])(void) = {
 [SYS_link]    sys_link,
 [SYS_mkdir]   sys_mkdir,
 [SYS_close]   sys_close,
+[SYS_freeze]   sys_freeze,
+[SYS_resume]   sys_resume,
 };
 
 void
