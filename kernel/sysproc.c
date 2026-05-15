@@ -112,11 +112,21 @@ uint64
 sys_freeze(void)
 {
   int pid;
-  // Retrieve the first argument (the PID) from the system call
+  uint64 reason_addr;
+  char reason[32];
+
+  // Arg 0: pid (argint returns void in this xv6 version)
   argint(0, &pid);
-  
-  // Call the process management logic (to be provided by Member 1)
-  return freeze_process(pid); 
+
+  // Arg 1: pointer to reason string in user space
+  argaddr(1, &reason_addr);
+
+  // Copy string safely from user space into kernel buffer
+  if(copyinstr(myproc()->pagetable, reason, reason_addr, sizeof(reason)) < 0){
+    return freeze_process(pid, "unknown");
+  }
+
+  return freeze_process(pid, reason);
 }
 
 uint64
