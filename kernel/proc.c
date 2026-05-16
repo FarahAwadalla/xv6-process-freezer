@@ -109,7 +109,7 @@ resume_process(int pid)
 
   p->state = RUNNABLE;     // scheduler will pick it up
   p->frozen_state = 0;
-  memset(p->freeze_reason, 0, sizeof(p->freeze_reason));
+  memset(p->freeze_reason, 0, sizeof(p->freeze_reason)); // clear reason
   release(&p->lock);
 
   return 0;
@@ -756,13 +756,13 @@ void
 procdump(void)
 {
   static char *states[] = {
-  [UNUSED]    "unused",
-  [USED]      "used",
-  [SLEEPING]  "sleep ",
-  [RUNNABLE]  "runble",
-  [RUNNING]   "run   ",
-  [ZOMBIE]    "zombie",
-  [FROZEN]    "frozen"
+  [UNUSED]    = "unused",
+  [USED]      = "used",
+  [SLEEPING]  = "sleep ",
+  [RUNNABLE]  = "runble",
+  [RUNNING]   = "run   ",
+  [ZOMBIE]    = "zombie",
+  [FROZEN]    = "frozen"
   };
   struct proc *p;
   char *state;
