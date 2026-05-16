@@ -34,9 +34,9 @@ test_invalid_pid(void)
 {
   printf("\n=== Test 1: Invalid PIDs ===\n");
 
-  check("freeze(-1)", freeze(-1) == -1);
-  check("freeze(0)", freeze(0) == -1);
-  check("freeze(99999)", freeze(99999) == -1);
+  check("freeze(-1)", freeze(-1, "test") == -1);
+  check("freeze(0)", freeze(0, "test") == -1);
+  check("freeze(99999)", freeze(99999, "test") == -1);
 
   check("resume(-1)", resume(-1) == -1);
   check("resume(0)", resume(0) == -1);
@@ -60,7 +60,7 @@ test_freeze_zombie(void)
 
   sleep(5);
 
-  check("freeze(zombie) == -1", freeze(pid) == -1);
+  check("freeze(zombie) == -1", freeze(pid, "test") == -1);
 
   wait(0);
 }
@@ -84,7 +84,7 @@ test_parent_freeze_child(void)
 
   sleep(5);
 
-  check("freeze(child)", freeze(pid) == 0);
+  check("freeze(child)", freeze(pid, "test") == 0);
 
   sleep(20);
 
@@ -108,7 +108,7 @@ test_self_freeze(void)
   if(pid == 0){
     sleep(5);
 
-    freeze(getpid());
+    freeze(getpid(), "self");
 
     // resumes here after parent resumes process
     exit(0);
@@ -142,9 +142,8 @@ test_double_freeze(void)
 
   sleep(5);
 
-  check("first freeze()", freeze(pid) == 0);
-
-  check("second freeze()", freeze(pid) == -1);
+  check("first freeze()", freeze(pid, "test") == 0);
+  check("second freeze()", freeze(pid, "test") == -1);
 
   resume(pid);
 
@@ -172,7 +171,7 @@ test_repeated_resume(void)
 
   sleep(5);
 
-  freeze(pid);
+  freeze(pid, "test");
 
   check("first resume()", resume(pid) == 0);
 
@@ -206,7 +205,7 @@ test_multiple_cycles(void)
 
   for(int i = 0; i < 5; i++){
 
-    if(freeze(pid) != 0){
+    if(freeze(pid, "test") != 0){
       ok = 0;
       break;
     }
@@ -259,7 +258,7 @@ test_stress_many(void)
 
   for(int i = 0; i < NPROCS; i++){
 
-    if(freeze(pids[i]) != 0){
+    if(freeze(pids[i], "test") != 0){
       ok1 = 0;
     }
   }
@@ -307,8 +306,7 @@ test_freeze_then_kill(void)
 
   sleep(5);
 
-  check("freeze before kill", freeze(pid) == 0);
-
+  check("freeze before kill", freeze(pid, "test") == 0);
   kill(pid);
 
   resume(pid);

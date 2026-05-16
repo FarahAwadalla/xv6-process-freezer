@@ -58,7 +58,7 @@ int can_freeze(struct proc *p){
 	return 1;
 }
 int
-freeze_process(int pid)
+freeze_process(int pid, char *reason)
 {
   struct proc *caller = myproc();
   struct proc *p;
@@ -74,6 +74,13 @@ freeze_process(int pid)
 
   p->frozen_state = p->state;
   p->state = FROZEN;
+
+  if(reason && reason[0] != '\0')
+    strncpy(p->freeze_reason, reason, sizeof(p->freeze_reason) - 1);
+  else
+    strncpy(p->freeze_reason, "unknown", sizeof(p->freeze_reason) - 1);
+  p->freeze_reason[sizeof(p->freeze_reason) - 1] = '\0';
+
   release(&p->lock);
 
   // Self-freeze: must yield CPU immediately
@@ -102,6 +109,7 @@ resume_process(int pid)
 
   p->state = RUNNABLE;     // scheduler will pick it up
   p->frozen_state = 0;
+  memset(p->freeze_reason, 0, sizeof(p->freeze_reason)); // clear reason
   release(&p->lock);
 
   return 0;
@@ -220,6 +228,9 @@ found:
     return 0;
   }
 
+  p->frozen = 0;
+  memset(p->freeze_reason, 0, sizeof(p->freeze_reason));
+  
   // Set up new context to start executing at forkret,
   // which returns to user space.
   memset(&p->context, 0, sizeof(p->context));
@@ -249,6 +260,8 @@ freeproc(struct proc *p)
   p->killed = 0;
   p->xstate = 0;
   p->state = UNUSED;
+  p->frozen = 0;
+  memset(p->freeze_reason, 0, sizeof(p->freeze_reason));
 }
 
 // Create a user page table for a given process, with no user memory,
@@ -743,13 +756,13 @@ void
 procdump(void)
 {
   static char *states[] = {
-  [UNUSED]    "unused",
-  [USED]      "used",
-  [SLEEPING]  "sleep ",
-  [RUNNABLE]  "runble",
-  [RUNNING]   "run   ",
-  [ZOMBIE]    "zombie",
-  [FROZEN]    "frozen"
+  [UNUSED]    = "unused",
+  [USED]      = "used",
+  [SLEEPING]  = "sleep ",
+  [RUNNABLE]  = "runble",
+  [RUNNING]   = "run   ",
+  [ZOMBIE]    = "zombie",
+  [FROZEN]    = "frozen"
   };
   struct proc *p;
   char *state;
@@ -762,7 +775,10 @@ procdump(void)
       state = states[p->state];
     else
       state = "???";
-    printf("%d %s %s", p->pid, state, p->name);
+    if(p->state == FROZEN)
+  printf("%d %s %s [frozen: %s]", p->pid, state, p->name, p->freeze_reason);
+else
+  printf("%d %s %s", p->pid, state, p->name);
     printf("\n");
   }
 }

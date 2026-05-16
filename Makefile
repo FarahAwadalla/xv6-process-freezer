@@ -197,6 +197,8 @@ UPROGS=\
 	$U/_dorphan\
 	$U/_fork\
 	$U/_fd\
+	$U/_freeze\       
+	$U/_testfreeze\    
 
 
 ifeq ($(LAB),util)
